@@ -1,18 +1,39 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: msa-ingress
+  name: gearfirst-ingress
 spec:
   rules:
-    # HTTP 요청에 대한 규칙들을 정의합니다.
     - http:
         paths:
-          # '/parts' 로 시작하는 모든 경로의 요청은
-          - path: /parts
+          - path: /inventory
             pathType: Prefix
             backend:
               service:
-                # 'parts-service'로 보냅니다.
-                name: parts-service
+                name: inventory-service
+                port:
+                  number: 80
+
+          - path: /order
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 80
+
+          - path: /receipt
+            pathType: Prefix
+            backend:
+              service:
+                name: receipt-service
+                port:
+                  number: 80
+
+          - path: /warehouse
+            pathType: Prefix
+            backend:
+              service:
+                name: warehouse-service
                 port:
                   number: 80

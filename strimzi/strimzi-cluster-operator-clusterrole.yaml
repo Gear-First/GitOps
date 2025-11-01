@@ -1,0 +1,36 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: strimzi-cluster-operator-full
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps", "secrets", "events", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "watch", "list", "create", "update", "patch"]
+  - apiGroups: ["kafka.strimzi.io"]
+    resources:
+      - kafkas
+      - kafkas/status
+      - kafkanodepools
+      - kafkanodepools/status
+      - kafkatopics
+      - kafkatopics/status
+      - kafkausers
+      - kafkausers/status
+      - kafkabridges
+      - kafkabridges/status
+      - kafkaconnects
+      - kafkaconnects/status
+      - kafkamirrormaker2s
+      - kafkamirrormaker2s/status
+      - kafkarebalances
+      - kafkarebalances/status
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["core.strimzi.io"]
+    resources: ["strimzipodsets", "strimzipodsets/status"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

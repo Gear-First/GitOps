@@ -1,0 +1,18 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: node-pool-0
+  namespace: default
+  # (핵심) 이 레이블로 'gearfirst-kafka-cluster'에 연결합니다.
+  labels:
+    strimzi.io/cluster: gearfirst-kafka-cluster
+spec:
+  replicas: 1
+  storage:
+    type: persistent-claim
+    size: 10Gi
+    deleteClaim: true
+  # KRaft (Kafka 4.0.0) 필수 설정
+  roles:
+    - broker
+    - controller

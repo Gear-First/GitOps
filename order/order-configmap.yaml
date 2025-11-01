@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # ConfigMap의 이름을 정합니다.
+  name: order-service-config
+data:
+  # --- 이 부분에 application.yml의 내용을 그대로 붙여넣습니다 ---
+  # 'application.yml' 이라는 이름의 키(key)로 파일 내용을 저장합니다.
+  application.yml: |-
+    server:
+      shutdown: graceful
+      servlet:
+        context-path: /order
+    
+    spring:
+      lifecycle:
+        timeout-per-shutdown-phase: 30s
+      datasource:
+        url: jdbc:postgresql://127.0.0.1:5432/orderdb
+        username: postgres
+        password: ${DB_PASSWORD}
+        hikari:
+          maximum-pool-size: 5        # 최대 10개 커넥션
+          #minimum-idle: 2            # 최소 2개 유휴
+          #idle-timeout: 30000        # 30초 후 유휴 커넥션 제거
+          #max-lifetime: 1800000      # 30분 후 커넥션 재생성
+          #connection-timeout: 30000  # 30초 이상 대기 시 예외  
+      jpa:
+        hibernate:
+          # ddl-auto: 데이터베이스 스키마(테이블) 자동 생성 전략
+          # create: 애플리케이션 시작 시 기존 테이블을 모두 삭제하고, 엔티티 기준으로 새로 생성
+          ddl-auto: update
+        properties:
+          hibernate:
+            # 실행되는 SQL 쿼리를 보기 좋게 포맷팅하여 로그에 출력
+            format_sql: true
+      kafka:
+        # (필수) KAFKA_BOOTSTRAP_SERVERS 환경 변수를 읽어옵니다.
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    
+        # -----------------------------------------------------
+        # 1. 프로듀서(Producer) 설정: DTO 객체 -> JSON
+        # -----------------------------------------------------
+        producer:
+          # (1) 메시지 유실 방지: acks=all
+          # 리더 브로커와 모든 복제본까지 저장이 완료되었음을 확인받습니다.
+          acks: all
+    
+          # (2) 중복 전송 방지: 멱등성(Idempotence) 활성화
+          # 네트워크 오류로 재시도 시, 중복된 메시지가 저장되는 것을 방지합니다.
+          enable-idempotence: true
+    
+          # 메시지 Key는 String을 사용
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          # 메시지 Value(내용)는 JSON으로 변환 (JsonSerializer 사용)
+          value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+          properties:
+            spring.json.use.type.headers: false 
+    
+        # -----------------------------------------------------
+        # 2. 컨슈머(Consumer) 설정: JSON -> DTO 객체
+        # -----------------------------------------------------
+        consumer:
+          # (3) 중복 처리 방지: 자동 커밋 비활성화
+          # enable-auto-commit: false로 설정하여, 우리가 직접 "처리 완료" 신호를 보냅니다.
+          enable-auto-commit: false
+    
+          # 컨슈머 그룹이 처음 시작될 때, 가장 오래된 메시지부터 읽어옵니다.
+          auto-offset-reset: earliest
+          # 메시지 Key는 String을 사용
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          # 메시지 Value(내용)는 JSON에서 DTO로 복원 (JsonDeserializer 사용)
+          value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    
+          # (★ 매우 중요 ★) JsonDeserializer 설정
+          properties:
+            spring.json.trusted.packages: "*"
+    
+        # (3) 수동 커밋을 위한 리스너 설정
+        listener:
+          ack-mode: MANUAL_IMMEDIATE
+    
+    management:
+      endpoint:
+        health:
+          probes:
+            enabled: true
+      endpoints:
+        web:
+          exposure:
+            include: health,info
