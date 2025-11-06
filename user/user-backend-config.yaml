@@ -1,0 +1,12 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: user-backend-config
+spec:
+  connectionDraining:
+    drainingTimeoutSec: 50
+  healthCheck:
+    # 헬스 체크를 보낼 경로를 지정합니다.
+    requestPath: /user/actuator/health
+    # 헬스 체크를 보낼 포트를 지정합니다.
+    port: 8080

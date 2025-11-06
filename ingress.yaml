@@ -2,38 +2,26 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: gearfirst-ingress
+  annotations:
+    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.enable-forwarded-headers: "true"
 spec:
   rules:
     - http:
         paths:
-          - path: /inventory
+          - path: /
             pathType: Prefix
             backend:
               service:
-                name: inventory-service
+                name: api-gateway-service
                 port:
                   number: 80
 
-          - path: /order
+          - path: /auth
             pathType: Prefix
             backend:
               service:
-                name: order-service
-                port:
-                  number: 80
-
-          - path: /receipt
-            pathType: Prefix
-            backend:
-              service:
-                name: receipt-service
-                port:
-                  number: 80
-
-          - path: /warehouse
-            pathType: Prefix
-            backend:
-              service:
-                name: warehouse-service
+                name: auth-service
                 port:
                   number: 80
