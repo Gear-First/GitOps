@@ -58,7 +58,7 @@ data:
                   predicates:
                     - Path=/order/**
                   filters:
-                    - StripPrefix = 1 #"/order"부분 제거하고 내부로 전달
+                    - StripPrefix=1 #"/order"부분 제거하고 내부로 전달
         
                 - id: inventory-service-route
                   uri: lb://inventory-service

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service-deployment-mobile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service-mobile
+  template:
+    metadata:
+      labels:
+        app: auth-service-mobile
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: auth-service-config
+      containers:
+        - name: auth-service-mobile
+          image: asia-northeast1-docker.pkg.dev/gearfirst/gearfirst-docker-repo/auth-service:v2.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-sql-credentials
+                  key: password
+            - name: SPRING_CONFIG_LOCATION
+              value: file:/config/application.yml
+            - name: SPRING_PROFILES_ACTIVE
+              value: mobile
+            - name: COOKIE_SAMESITE
+              value: Lax         # ✅ 앱에서는 Lax (iOS/Android)
+            - name: COOKIE_SECURE
+              value: "false"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /config
+
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8.0
+          args:
+            - "--structured-logs"
+            # [INSTANCE_CONNECTION_NAME]을 아래 명령어로 확인하여 붙여넣으세요.
+            - "gearfirst:asia-northeast1:gearfirst-db-instance"
+          securityContext:
+            runAsNonRoot: true
+
+  
